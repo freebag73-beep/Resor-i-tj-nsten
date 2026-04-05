@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { useRouter, useParams } from 'next/navigation';
 import {
-  MapPin, Car, Clock, Gauge, FileText, Trash2, Edit2, CheckCircle, ArrowLeft
+  MapPin, Car, Clock, Gauge, FileText, Trash2, Edit2, CheckCircle, ArrowLeft, Briefcase, Home
 } from 'lucide-react';
 
 type Trip = {
@@ -57,6 +57,19 @@ export default function TripDetailPage() {
     router.push('/trips');
   };
 
+  const handleToggleType = async () => {
+    if (!trip) return;
+    const newType = trip.trip_type === 'business' ? 'private' : 'business';
+    const res = await fetch(`/api/trips/${id}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ trip_type: newType }),
+    });
+    const updated = await res.json();
+    setTrip(updated);
+    setForm(updated);
+  };
+
   if (!trip) {
     return <div className="p-4 space-y-3 animate-pulse">{[1,2,3].map(i => <div key={i} className="card h-16 bg-gray-50" />)}</div>;
   }
@@ -89,17 +102,44 @@ export default function TripDetailPage() {
           <div className={`rounded-full p-2 ${trip.trip_type === 'business' ? 'bg-blue-100' : 'bg-gray-100'}`}>
             <Car size={20} className={trip.trip_type === 'business' ? 'text-blue-600' : 'text-gray-500'} />
           </div>
-          <div>
+          <div className="flex-1 min-w-0">
             <p className="font-bold text-gray-900 text-lg">{trip.purpose || '(inget ärende)'}</p>
             <p className="text-sm text-gray-500 capitalize">{dateFormatted}</p>
-            <span className={`mt-1 inline-block text-xs rounded-full px-2 py-0.5 ${
-              trip.trip_type === 'business' ? 'bg-blue-50 text-blue-600' : 'bg-gray-100 text-gray-500'
-            }`}>
-              {trip.trip_type === 'business' ? 'Tjänsteresa' : 'Privat resa'}
-            </span>
           </div>
         </div>
       </div>
+
+      {/* Trip type toggle – quick switch without entering edit mode */}
+      {!editing && (
+        <div className="card">
+          <p className="text-xs text-gray-500 mb-2 font-medium">RESTYP</p>
+          <div className="grid grid-cols-2 gap-2">
+            <button
+              onClick={() => trip.trip_type !== 'business' && handleToggleType()}
+              className={`flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-semibold transition-colors ${
+                trip.trip_type === 'business'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+              }`}
+            >
+              <Briefcase size={18} />
+              Tjänsteresa
+            </button>
+            <button
+              onClick={() => trip.trip_type !== 'private' && handleToggleType()}
+              className={`flex items-center justify-center gap-2 rounded-lg border-2 py-3 text-sm font-semibold transition-colors ${
+                trip.trip_type === 'private'
+                  ? 'border-gray-500 bg-gray-100 text-gray-700'
+                  : 'border-gray-200 text-gray-400 hover:border-gray-300 hover:text-gray-600'
+              }`}
+            >
+              <Home size={18} />
+              Privat
+            </button>
+          </div>
+          <p className="text-xs text-gray-400 mt-2 text-center">Tryck för att byta – sparas direkt</p>
+        </div>
+      )}
 
       {editing ? (
         <div className="space-y-3">

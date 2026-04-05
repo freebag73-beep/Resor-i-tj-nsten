@@ -5,20 +5,23 @@ export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
   const year = searchParams.get('year') ?? new Date().getFullYear().toString();
   const month = searchParams.get('month') ?? undefined;
-  const type = searchParams.get('type') ?? 'business';
+  const type = searchParams.get('type') ?? '';   // '' = alla restyper
   const format = searchParams.get('format') ?? 'csv';
 
-  const trips = getTrips({ year, month, type }).reverse(); // ascending for export
+  const trips = getTrips({ year, month, type: type || undefined }).reverse(); // ascending for export
+
+  const tripTypeLabel = (t: string) => t === 'business' ? 'Tjänsteresa' : 'Privat';
 
   if (format === 'csv') {
     const headers = [
-      'Datum', 'Förare', 'Fordon', 'Reg.nr', 'Ärende/Syfte',
+      'Datum', 'Restyp', 'Förare', 'Fordon', 'Reg.nr', 'Ärende/Syfte',
       'Startplats', 'Slutplats', 'Mätare start (km)', 'Mätare slut (km)',
       'Körd sträcka (km)', 'Starttid', 'Sluttid'
     ];
 
     const rows = trips.map(t => [
       t.date,
+      tripTypeLabel(t.trip_type),
       t.driver,
       t.vehicle_name ?? '',
       t.registration ?? '',

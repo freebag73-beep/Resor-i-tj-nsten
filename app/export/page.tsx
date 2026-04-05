@@ -5,7 +5,7 @@ import { Download, FileText, Table2, AlertCircle, CheckCircle } from 'lucide-rea
 export default function ExportPage() {
   const [year, setYear] = useState(new Date().getFullYear().toString());
   const [month, setMonth] = useState('');
-  const [tripType, setTripType] = useState('business');
+  const [tripType, setTripType] = useState('');
   const [format, setFormat] = useState<'csv' | 'pdf'>('csv');
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
@@ -67,8 +67,9 @@ export default function ExportPage() {
         <div>
           <label className="label">Restyp</label>
           <select className="input" value={tripType} onChange={e => setTripType(e.target.value)}>
-            <option value="business">Tjänsteresor</option>
-            <option value="private">Privata resor</option>
+            <option value="">Alla resor</option>
+            <option value="business">Endast tjänsteresor</option>
+            <option value="private">Endast privata resor</option>
           </select>
         </div>
 
@@ -155,8 +156,11 @@ async function generatePDF(data: {
   doc.text(`Förare: ${driver}`, 14, 22);
   doc.text(`Genererad: ${new Date().toLocaleDateString('sv-SE')}`, 14, 27);
 
+  const typeLabel = (v: unknown) => v === 'business' ? 'Tjänsteresa' : 'Privat';
+
   const rows = data.trips.map((t) => [
     String(t.date ?? ''),
+    typeLabel(t.trip_type),
     String(t.driver ?? driver),
     String(t.vehicle_name ?? ''),
     String(t.registration ?? ''),
@@ -173,12 +177,12 @@ async function generatePDF(data: {
   autoTable(doc, {
     startY: 32,
     head: [[
-      'Datum', 'Förare', 'Fordon', 'Reg.nr', 'Ärende',
+      'Datum', 'Restyp', 'Förare', 'Fordon', 'Reg.nr', 'Ärende',
       'Från', 'Till', 'Mätare start', 'Mätare slut', 'km'
     ]],
     body: [
       ...rows,
-      [{ content: `Totalt: ${totalKm.toFixed(1)} km`, colSpan: 10, styles: { fontStyle: 'bold', halign: 'right' } }]
+      [{ content: `Totalt: ${totalKm.toFixed(1)} km`, colSpan: 11, styles: { fontStyle: 'bold', halign: 'right' } }]
     ],
     styles: { fontSize: 8, cellPadding: 2 },
     headStyles: { fillColor: [37, 99, 235] },
