@@ -19,9 +19,6 @@ export type Trip = {
   driver: string;
   trip_type: 'business' | 'private';
   route_points: string | null;
-  toll_cost: number | null;
-  parking_cost: number | null;
-  other_cost: number | null;
   created_at: string;
 };
 

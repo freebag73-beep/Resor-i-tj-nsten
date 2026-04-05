@@ -3,7 +3,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import {
   Bluetooth, BluetoothOff, MapPin, Navigation, Square,
-  CheckCircle, AlertCircle, Car, Clock, Gauge
+  CheckCircle, AlertCircle, Car, Clock, Gauge, Sparkles
 } from 'lucide-react';
 import { useBluetooth } from '@/lib/useBluetooth';
 import { useTrip } from '@/lib/useTrip';
@@ -11,6 +11,12 @@ import { useTrip } from '@/lib/useTrip';
 type Vehicle = { id: number; name: string; registration: string; bluetooth_name: string | null };
 
 type Phase = 'setup' | 'tracking' | 'finish';
+
+type Suggestion = {
+  suggested: 'business' | 'private';
+  confidence: number;
+  source: 'history' | 'heuristic';
+};
 
 export default function NewTripPage() {
   const router = useRouter();
@@ -22,6 +28,8 @@ export default function NewTripPage() {
   const [endOdometer, setEndOdometer] = useState('');
   const [purpose, setPurpose] = useState('');
   const [tripType, setTripType] = useState<'business' | 'private'>('business');
+  const [suggestion, setSuggestion] = useState<Suggestion | null>(null);
+  const [suggestionDismissed, setSuggestionDismissed] = useState(false);
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
   const [elapsed, setElapsed] = useState(0);
@@ -40,6 +48,20 @@ export default function NewTripPage() {
       setSelectedVehicle(def);
     });
   }, []);
+
+  // Fetch suggestion when entering finish phase
+  useEffect(() => {
+    if (phase !== 'finish') return;
+    const hour = new Date().getHours();
+    fetch(`/api/trips/suggest-type?hour=${hour}`)
+      .then(r => r.json())
+      .then((s: Suggestion) => {
+        setSuggestion(s);
+        // Auto-apply the suggestion as the default
+        setTripType(s.suggested);
+      })
+      .catch(() => {/* ignore */});
+  }, [phase]);
 
   // Elapsed timer
   useEffect(() => {
@@ -302,24 +324,54 @@ export default function NewTripPage() {
         <p className="text-xs text-gray-400">Krävs av Skatteverket</p>
       </div>
 
-      {/* Trip type */}
+      {/* Trip type with smart suggestion */}
       <div className="card space-y-2">
-        <label className="label">Restyp</label>
-        <div className="grid grid-cols-2 gap-2">
-          {(['business', 'private'] as const).map(t => (
-            <button
-              key={t}
-              onClick={() => setTripType(t)}
-              className={`rounded-lg border-2 py-2 text-sm font-medium transition-colors ${
-                tripType === t
-                  ? 'border-blue-500 bg-blue-50 text-blue-700'
-                  : 'border-gray-200 text-gray-600 hover:border-gray-300'
-              }`}
-            >
-              {t === 'business' ? 'Tjänsteresa' : 'Privat'}
-            </button>
-          ))}
+        <div className="flex items-center justify-between">
+          <label className="label mb-0">Restyp</label>
+          {suggestion && !suggestionDismissed && (
+            <span className="flex items-center gap-1 text-xs text-purple-600 bg-purple-50 rounded-full px-2 py-0.5">
+              <Sparkles size={11} />
+              {suggestion.source === 'history'
+                ? `Förslag baserat på historik (${suggestion.confidence}%)`
+                : `Förslag baserat på tid på dygnet`}
+            </span>
+          )}
         </div>
+
+        <div className="grid grid-cols-2 gap-2">
+          {(['business', 'private'] as const).map(t => {
+            const isSuggested = suggestion?.suggested === t && !suggestionDismissed;
+            return (
+              <button
+                key={t}
+                onClick={() => {
+                  setTripType(t);
+                  setSuggestionDismissed(true);
+                }}
+                className={`rounded-lg border-2 py-2 text-sm font-medium transition-colors relative ${
+                  tripType === t
+                    ? 'border-blue-500 bg-blue-50 text-blue-700'
+                    : 'border-gray-200 text-gray-600 hover:border-gray-300'
+                }`}
+              >
+                {t === 'business' ? 'Tjänsteresa' : 'Privat'}
+                {isSuggested && tripType === t && (
+                  <span className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-purple-500 rounded-full border-2 border-white" />
+                )}
+              </button>
+            );
+          })}
+        </div>
+
+        {suggestion && !suggestionDismissed && (
+          <p className="text-xs text-gray-400">
+            Appen föreslår <strong>{suggestion.suggested === 'business' ? 'Tjänsteresa' : 'Privat'}</strong>
+            {suggestion.source === 'history'
+              ? ' – baserat på dina tidigare resor vid denna tid.'
+              : ' – baserat på att det är utanför arbetstid.'}
+            {' '}Tryck för att välja ett annat alternativ.
+          </p>
+        )}
       </div>
 
       {/* End odometer */}
