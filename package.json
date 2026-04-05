@@ -9,6 +9,8 @@
     "lint": "next lint"
   },
   "dependencies": {
+    "@netlify/blobs": "^10.7.4",
+    "@netlify/plugin-nextjs": "^5.15.9",
     "date-fns": "^3.6.0",
     "jspdf": "^4.2.1",
     "jspdf-autotable": "^5.0.7",

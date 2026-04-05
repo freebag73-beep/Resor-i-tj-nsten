@@ -3,7 +3,7 @@ import { getTrips, createTrip } from '@/lib/db';
 
 export async function GET(req: NextRequest) {
   const { searchParams } = new URL(req.url);
-  const trips = getTrips({
+  const trips = await getTrips({
     year: searchParams.get('year') ?? undefined,
     month: searchParams.get('month') ?? undefined,
     type: searchParams.get('type') ?? undefined,
@@ -13,7 +13,7 @@ export async function GET(req: NextRequest) {
 
 export async function POST(req: NextRequest) {
   const body = await req.json();
-  const trip = createTrip({
+  const trip = await createTrip({
     vehicle_id: body.vehicle_id ?? null,
     date: body.date,
     start_time: body.start_time,
