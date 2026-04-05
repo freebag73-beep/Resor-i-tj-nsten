@@ -12,19 +12,28 @@ export default function SettingsPage() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('/api/settings').then(r => r.json()).then(d => {
-      setDriverName(d.settings?.driver_name ?? '');
-      setCarBtName(d.settings?.car_bluetooth_name ?? '');
-      setVehicles(
-        (d.vehicles ?? []).map((v: Vehicle) => ({
-          id: v.id,
-          name: v.name,
-          registration: v.registration,
-          bluetooth_name: v.bluetooth_name ?? '',
-        }))
-      );
-      setLoading(false);
-    });
+    fetch('/api/settings')
+      .then(r => {
+        if (!r.ok) throw new Error(`HTTP ${r.status}`);
+        return r.json();
+      })
+      .then(d => {
+        setDriverName(d.settings?.driver_name ?? '');
+        setCarBtName(d.settings?.car_bluetooth_name ?? '');
+        setVehicles(
+          (d.vehicles ?? []).map((v: Vehicle) => ({
+            id: v.id,
+            name: v.name,
+            registration: v.registration,
+            bluetooth_name: v.bluetooth_name ?? '',
+          }))
+        );
+        setLoading(false);
+      })
+      .catch(err => {
+        console.error('Settings load error:', err);
+        setLoading(false);
+      });
   }, []);
 
   const handleSave = async () => {
