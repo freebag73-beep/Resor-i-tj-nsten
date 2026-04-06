@@ -4,6 +4,13 @@ import { useRouter, useParams } from 'next/navigation';
 import {
   MapPin, Car, Clock, Gauge, FileText, Trash2, Edit2, CheckCircle, ArrowLeft, Briefcase, Home
 } from 'lucide-react';
+import dynamic from 'next/dynamic';
+
+const TripMap = dynamic(() => import('@/components/TripMap'), { ssr: false, loading: () => (
+  <div style={{ height: 260, borderRadius: 12, background: '#e5e7eb', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+    <span className="text-sm text-gray-400">Laddar karta…</span>
+  </div>
+) });
 
 type Trip = {
   id: number;
@@ -20,6 +27,7 @@ type Trip = {
   trip_type: string;
   vehicle_name: string | null;
   registration: string | null;
+  route_points: string | null;
 };
 
 export default function TripDetailPage() {
@@ -225,6 +233,12 @@ export default function TripDetailPage() {
                 </div>
               </div>
             </div>
+            {/* Map */}
+            <TripMap
+              routePoints={trip.route_points ? JSON.parse(trip.route_points) : null}
+              startAddress={trip.start_address}
+              endAddress={trip.end_address}
+            />
           </div>
 
           {/* Stats */}
