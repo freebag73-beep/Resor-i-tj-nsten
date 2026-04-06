@@ -1,12 +1,11 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { User, Car, Bluetooth, Save, CheckCircle, Plus, Trash2 } from 'lucide-react';
+import { User, Car, Save, CheckCircle, Plus, Trash2 } from 'lucide-react';
 
 type Vehicle = { id?: number; name: string; registration: string; bluetooth_name: string };
 
 export default function SettingsPage() {
   const [driverName, setDriverName] = useState('');
-  const [carBtName, setCarBtName] = useState('');
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [saved, setSaved] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -19,7 +18,6 @@ export default function SettingsPage() {
       })
       .then(d => {
         setDriverName(d.settings?.driver_name ?? '');
-        setCarBtName(d.settings?.car_bluetooth_name ?? '');
         setVehicles(
           (d.vehicles ?? []).map((v: Vehicle) => ({
             id: v.id,
@@ -44,7 +42,6 @@ export default function SettingsPage() {
       body: JSON.stringify({
         settings: {
           driver_name: driverName,
-          car_bluetooth_name: carBtName,
         },
       }),
     });
@@ -102,37 +99,6 @@ export default function SettingsPage() {
             onChange={e => setDriverName(e.target.value)}
           />
           <p className="text-xs text-gray-400 mt-1">Anges på alla resor och i körjournalen</p>
-        </div>
-      </div>
-
-      {/* Bluetooth */}
-      <div className="card space-y-3">
-        <div className="flex items-center gap-2">
-          <Bluetooth size={18} className="text-blue-500" />
-          <h2 className="font-semibold text-gray-800">Bilens Bluetooth</h2>
-        </div>
-        <div>
-          <label className="label">Bluetooth-namn på bilens system</label>
-          <input
-            type="text"
-            className="input"
-            placeholder="t.ex. Volvo V70, BMW Radio…"
-            value={carBtName}
-            onChange={e => setCarBtName(e.target.value)}
-          />
-          <p className="text-xs text-gray-400 mt-1">
-            Hittas i bilens Bluetooth-inställningar. Appen söker specifikt efter detta namn.
-            Lämna tomt för att visa alla enheter vid koppling.
-          </p>
-        </div>
-        <div className="bg-blue-50 rounded-lg p-3 text-xs text-blue-800 space-y-1">
-          <p className="font-semibold">Hur det fungerar:</p>
-          <ul className="list-disc ml-4 space-y-0.5">
-            <li>Tryck "Koppla till bil" på startresasidan</li>
-            <li>Välj bilens Bluetooth-enhet i dialogrutan</li>
-            <li>Appen märker resan som kopplad till bil och startar GPS-spårning</li>
-            <li>Kräver Chrome på Android eller desktop (Safari stöder ej Web Bluetooth)</li>
-          </ul>
         </div>
       </div>
 

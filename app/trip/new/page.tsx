@@ -35,7 +35,7 @@ export default function NewTripPage() {
   const [elapsed, setElapsed] = useState(0);
   const [startTs, setStartTs] = useState<number | null>(null);
 
-  const bluetooth = useBluetooth(settings.car_bluetooth_name ?? '');
+  const bluetooth = useBluetooth(selectedVehicle?.bluetooth_name ?? settings.car_bluetooth_name ?? '');
   const trip = useTrip();
 
   useEffect(() => {
